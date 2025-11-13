@@ -40,6 +40,24 @@ npm install e2e-seo
 
 ## 🎯 Quick Start
 
+### CLI Usage
+
+```bash
+# Basic usage
+e2e-seo https://example.com
+
+# Save report to JSON
+e2e-seo https://example.com -o report.json
+
+# Test with mobile viewport
+e2e-seo https://example.com --viewport 375x667
+
+# Show browser (headed mode)
+e2e-seo https://example.com --headed
+```
+
+### Programmatic API
+
 ```typescript
 import { SEOChecker } from 'e2e-seo';
 
