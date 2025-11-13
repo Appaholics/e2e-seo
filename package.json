@@ -4,6 +4,9 @@
   "description": "e2e seo testing kit for websites",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "e2e-seo": "dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

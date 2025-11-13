@@ -33,3 +33,6 @@ npm-debug.log*
 # Temporary files
 tmp/
 temp/
+test-page.html
+test-*.js
+test-*.html

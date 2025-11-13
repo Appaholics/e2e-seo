@@ -76,7 +76,7 @@ export class SEOChecker {
     }
 
     await this.page.goto(this.options.url, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
     });
   }
 
