@@ -70,6 +70,13 @@ Checks performed:
   • Heading structure (H1-H6 hierarchy)
   • Image optimization (alt text)
   • Performance metrics (load time, DOM content loaded)
+  • Robots.txt validation
+  • XML sitemap detection
+  • Security (HTTPS, mixed content, security headers)
+  • Structured data (JSON-LD, Microdata)
+  • Social media tags (Twitter Cards, Facebook Open Graph)
+  • Content analysis (word count, readability)
+  • Links analysis (internal/external links)
 
 For more information, visit: https://github.com/yourusername/e2e-seo
   `);
@@ -94,7 +101,7 @@ async function main() {
   }
 
   const checker = new SEOChecker({
-    url: args.url,
+    url: args.url!,
     headless: args.headless !== false,
     viewport,
   });
@@ -116,6 +123,13 @@ async function main() {
       { name: 'Headings', checks: report.checks.headings },
       { name: 'Images', checks: report.checks.images },
       { name: 'Performance', checks: report.checks.performance },
+      { name: 'Robots.txt', checks: report.checks.robotsTxt },
+      { name: 'Sitemap', checks: report.checks.sitemap },
+      { name: 'Security', checks: report.checks.security },
+      { name: 'Structured Data', checks: report.checks.structuredData },
+      { name: 'Social Media', checks: report.checks.socialMedia },
+      { name: 'Content', checks: report.checks.content },
+      { name: 'Links', checks: report.checks.links },
     ];
 
     sections.forEach((section) => {

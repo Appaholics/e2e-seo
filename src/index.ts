@@ -4,6 +4,13 @@ import { MetaTagsChecker } from './checkers/metaTags';
 import { HeadingsChecker } from './checkers/headings';
 import { ImagesChecker } from './checkers/images';
 import { PerformanceChecker } from './checkers/performance';
+import { RobotsTxtChecker } from './checkers/robotsTxt';
+import { SitemapChecker } from './checkers/sitemap';
+import { SecurityChecker } from './checkers/security';
+import { StructuredDataChecker } from './checkers/structuredData';
+import { SocialMediaChecker } from './checkers/socialMedia';
+import { ContentChecker } from './checkers/content';
+import { LinksChecker } from './checkers/links';
 
 export class SEOChecker {
   private browser: Browser | null = null;
@@ -24,15 +31,29 @@ export class SEOChecker {
       const headingsChecker = new HeadingsChecker(this.page!);
       const imagesChecker = new ImagesChecker(this.page!);
       const performanceChecker = new PerformanceChecker(this.page!);
+      const robotsTxtChecker = new RobotsTxtChecker(this.page!);
+      const sitemapChecker = new SitemapChecker(this.page!);
+      const securityChecker = new SecurityChecker(this.page!);
+      const structuredDataChecker = new StructuredDataChecker(this.page!);
+      const socialMediaChecker = new SocialMediaChecker(this.page!);
+      const contentChecker = new ContentChecker(this.page!);
+      const linksChecker = new LinksChecker(this.page!);
 
-      const [metaTags, headings, images, performance] = await Promise.all([
+      const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links] = await Promise.all([
         metaTagsChecker.checkAll(),
         headingsChecker.checkAll(),
         imagesChecker.checkAll(),
         performanceChecker.checkAll(),
+        robotsTxtChecker.checkAll(),
+        sitemapChecker.checkAll(),
+        securityChecker.checkAll(),
+        structuredDataChecker.checkAll(),
+        socialMediaChecker.checkAll(),
+        contentChecker.checkAll(),
+        linksChecker.checkAll(),
       ]);
 
-      const allChecks = [...metaTags, ...headings, ...images, ...performance];
+      const allChecks = [...metaTags, ...headings, ...images, ...performance, ...robotsTxt, ...sitemap, ...security, ...structuredData, ...socialMedia, ...content, ...links];
       const passed = allChecks.filter((c) => c.passed).length;
       const failed = allChecks.filter((c) => !c.passed).length;
       const score = Math.round((passed / allChecks.length) * 100);
@@ -45,6 +66,13 @@ export class SEOChecker {
           headings,
           images,
           performance,
+          robotsTxt,
+          sitemap,
+          security,
+          structuredData,
+          socialMedia,
+          content,
+          links,
         },
         score,
         summary: {
@@ -95,3 +123,10 @@ export { MetaTagsChecker } from './checkers/metaTags';
 export { HeadingsChecker } from './checkers/headings';
 export { ImagesChecker } from './checkers/images';
 export { PerformanceChecker } from './checkers/performance';
+export { RobotsTxtChecker } from './checkers/robotsTxt';
+export { SitemapChecker } from './checkers/sitemap';
+export { SecurityChecker } from './checkers/security';
+export { StructuredDataChecker } from './checkers/structuredData';
+export { SocialMediaChecker } from './checkers/socialMedia';
+export { ContentChecker } from './checkers/content';
+export { LinksChecker } from './checkers/links';

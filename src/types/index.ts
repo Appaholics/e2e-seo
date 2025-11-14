@@ -12,6 +12,13 @@ export interface SEOReport {
     headings: SEOCheckResult[];
     images: SEOCheckResult[];
     performance: SEOCheckResult[];
+    robotsTxt: SEOCheckResult[];
+    sitemap: SEOCheckResult[];
+    security: SEOCheckResult[];
+    structuredData: SEOCheckResult[];
+    socialMedia: SEOCheckResult[];
+    content: SEOCheckResult[];
+    links: SEOCheckResult[];
   };
   score: number;
   summary: {
