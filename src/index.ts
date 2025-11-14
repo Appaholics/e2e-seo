@@ -11,6 +11,9 @@ import { StructuredDataChecker } from './checkers/structuredData';
 import { SocialMediaChecker } from './checkers/socialMedia';
 import { ContentChecker } from './checkers/content';
 import { LinksChecker } from './checkers/links';
+import { UIElementsChecker } from './checkers/uiElements';
+import { TechnicalChecker } from './checkers/technical';
+import { AccessibilityChecker } from './checkers/accessibility';
 
 export class SEOChecker {
   private browser: Browser | null = null;
@@ -38,8 +41,11 @@ export class SEOChecker {
       const socialMediaChecker = new SocialMediaChecker(this.page!);
       const contentChecker = new ContentChecker(this.page!);
       const linksChecker = new LinksChecker(this.page!);
+      const uiElementsChecker = new UIElementsChecker(this.page!);
+      const technicalChecker = new TechnicalChecker(this.page!);
+      const accessibilityChecker = new AccessibilityChecker(this.page!);
 
-      const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links] = await Promise.all([
+      const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility] = await Promise.all([
         metaTagsChecker.checkAll(),
         headingsChecker.checkAll(),
         imagesChecker.checkAll(),
@@ -51,9 +57,12 @@ export class SEOChecker {
         socialMediaChecker.checkAll(),
         contentChecker.checkAll(),
         linksChecker.checkAll(),
+        uiElementsChecker.checkAll(),
+        technicalChecker.checkAll(),
+        accessibilityChecker.checkAll(),
       ]);
 
-      const allChecks = [...metaTags, ...headings, ...images, ...performance, ...robotsTxt, ...sitemap, ...security, ...structuredData, ...socialMedia, ...content, ...links];
+      const allChecks = [...metaTags, ...headings, ...images, ...performance, ...robotsTxt, ...sitemap, ...security, ...structuredData, ...socialMedia, ...content, ...links, ...uiElements, ...technical, ...accessibility];
       const passed = allChecks.filter((c) => c.passed).length;
       const failed = allChecks.filter((c) => !c.passed).length;
       const score = Math.round((passed / allChecks.length) * 100);
@@ -73,6 +82,9 @@ export class SEOChecker {
           socialMedia,
           content,
           links,
+          uiElements,
+          technical,
+          accessibility,
         },
         score,
         summary: {
@@ -130,3 +142,6 @@ export { StructuredDataChecker } from './checkers/structuredData';
 export { SocialMediaChecker } from './checkers/socialMedia';
 export { ContentChecker } from './checkers/content';
 export { LinksChecker } from './checkers/links';
+export { UIElementsChecker } from './checkers/uiElements';
+export { TechnicalChecker } from './checkers/technical';
+export { AccessibilityChecker } from './checkers/accessibility';

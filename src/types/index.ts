@@ -19,6 +19,9 @@ export interface SEOReport {
     socialMedia: SEOCheckResult[];
     content: SEOCheckResult[];
     links: SEOCheckResult[];
+    uiElements: SEOCheckResult[];
+    technical: SEOCheckResult[];
+    accessibility: SEOCheckResult[];
   };
   score: number;
   summary: {

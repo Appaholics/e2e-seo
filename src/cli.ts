@@ -77,6 +77,9 @@ Checks performed:
   • Social media tags (Twitter Cards, Facebook Open Graph)
   • Content analysis (word count, readability)
   • Links analysis (internal/external links)
+  • UI elements (favicon, breadcrumbs, language tags)
+  • Technical SEO (redirects, response codes, compression, duplicates)
+  • Accessibility (ARIA labels, form labels, tab order)
 
 For more information, visit: https://github.com/yourusername/e2e-seo
   `);
@@ -130,6 +133,9 @@ async function main() {
       { name: 'Social Media', checks: report.checks.socialMedia },
       { name: 'Content', checks: report.checks.content },
       { name: 'Links', checks: report.checks.links },
+      { name: 'UI Elements', checks: report.checks.uiElements },
+      { name: 'Technical SEO', checks: report.checks.technical },
+      { name: 'Accessibility', checks: report.checks.accessibility },
     ];
 
     sections.forEach((section) => {
