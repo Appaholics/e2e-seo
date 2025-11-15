@@ -1,8 +1,13 @@
+import type { RuleSeverity } from '../config/types';
+
 export interface SEOCheckResult {
   passed: boolean;
   message: string;
+  severity?: RuleSeverity;
   details?: Record<string, any>;
 }
+
+export type { RuleSeverity };
 
 export interface SEOReport {
   url: string;
@@ -52,6 +57,8 @@ export interface SEOCheckerOptions {
     width: number;
     height: number;
   };
+  config?: import('../config').SEOConfig;
+  configFile?: string;
 }
 
 export interface MetaTag {

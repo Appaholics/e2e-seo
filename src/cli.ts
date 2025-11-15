@@ -8,7 +8,10 @@ interface CliArgs {
   output?: string;
   headless?: boolean;
   viewport?: string;
+  config?: string;
+  preset?: string;
   help?: boolean;
+  initConfig?: boolean;
 }
 
 function parseArgs(): CliArgs {
@@ -36,6 +39,17 @@ function parseArgs(): CliArgs {
       case '--viewport':
         args.viewport = argv[++i];
         break;
+      case '-c':
+      case '--config':
+        args.config = argv[++i];
+        break;
+      case '-p':
+      case '--preset':
+        args.preset = argv[++i];
+        break;
+      case '--init-config':
+        args.initConfig = true;
+        break;
       default:
         if (!arg.startsWith('-') && !args.url) {
           args.url = arg;
@@ -55,6 +69,9 @@ Usage: e2e-seo [options] <url>
 Options:
   -u, --url <url>        URL to check (required)
   -o, --output <file>    Output JSON report to file
+  -c, --config <file>    Configuration file (JSON or YAML)
+  -p, --preset <name>    Use preset configuration (basic, advanced, strict)
+  --init-config          Create a default configuration file
   --headed               Run browser in headed mode (default: headless)
   --viewport <WxH>       Set viewport size (e.g., 1920x1080 or 375x667)
   -h, --help             Show this help message
@@ -64,6 +81,9 @@ Examples:
   e2e-seo -u https://example.com -o report.json
   e2e-seo https://example.com --viewport 375x667
   e2e-seo https://example.com --headed
+  e2e-seo https://example.com --preset basic
+  e2e-seo https://example.com --config .e2e-seo.json
+  e2e-seo --init-config
 
 Checks performed (260+ checks across 27 categories):
   • Meta tags (title, description, Open Graph, canonical, viewport)
@@ -101,6 +121,18 @@ For more information, visit: https://github.com/yourusername/e2e-seo
 async function main() {
   const args = parseArgs();
 
+  // Handle --init-config flag
+  if (args.initConfig) {
+    const { ConfigLoader } = await import('./config');
+    const configPath = '.e2e-seo.json';
+    const preset = (args.preset as 'basic' | 'advanced' | 'strict') || 'advanced';
+    ConfigLoader.createDefaultConfig(configPath, preset);
+    console.log(`✓ Created configuration file: ${configPath}`);
+    console.log(`  Using preset: ${preset}`);
+    console.log(`\nEdit the file to customize your SEO rules and settings.`);
+    process.exit(0);
+  }
+
   if (args.help || !args.url) {
     printHelp();
     process.exit(args.help ? 0 : 1);
@@ -116,10 +148,18 @@ async function main() {
     }
   }
 
+  // Build configuration
+  let config;
+  if (args.preset) {
+    config = { preset: args.preset as 'basic' | 'advanced' | 'strict' };
+  }
+
   const checker = new SEOChecker({
     url: args.url!,
     headless: args.headless !== false,
     viewport,
+    configFile: args.config,
+    config,
   });
 
   try {
@@ -170,7 +210,20 @@ async function main() {
         const icon = check.passed ? '✓' : '✗';
         const color = check.passed ? '\x1b[32m' : '\x1b[31m';
         const reset = '\x1b[0m';
-        console.log(`  ${color}${icon}${reset} ${check.message}`);
+
+        // Display severity if present
+        let severityBadge = '';
+        if (check.severity && !check.passed) {
+          const severityColors = {
+            error: '\x1b[41m\x1b[37m',   // Red background, white text
+            warning: '\x1b[43m\x1b[30m', // Yellow background, black text
+            info: '\x1b[44m\x1b[37m',    // Blue background, white text
+          };
+          const severityColor = severityColors[check.severity];
+          severityBadge = ` ${severityColor} ${check.severity.toUpperCase()} ${reset}`;
+        }
+
+        console.log(`  ${color}${icon}${reset} ${check.message}${severityBadge}`);
       });
       console.log('');
     });

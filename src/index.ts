@@ -1,5 +1,6 @@
 import { chromium, Browser, Page } from 'playwright';
-import { SEOCheckerOptions, SEOReport } from './types';
+import { SEOCheckerOptions, SEOReport, SEOCheckResult } from './types';
+import { SEOConfig, ConfigLoader } from './config';
 import { MetaTagsChecker } from './checkers/metaTags';
 import { HeadingsChecker } from './checkers/headings';
 import { ImagesChecker } from './checkers/images';
@@ -31,11 +32,23 @@ import { InternationalizationChecker } from './checkers/internationalization';
 export class SEOChecker {
   private browser: Browser | null = null;
   private page: Page | null = null;
+  private config: SEOConfig;
 
   constructor(private options: SEOCheckerOptions) {
     this.options.headless = options.headless !== false;
     this.options.timeout = options.timeout || 30000;
     this.options.viewport = options.viewport || { width: 1920, height: 1080 };
+
+    // Load configuration
+    if (options.configFile) {
+      this.config = ConfigLoader.loadFromFile(options.configFile);
+    } else if (options.config) {
+      this.config = ConfigLoader.loadFromObject(options.config);
+    } else {
+      // Try to find config file in default locations
+      const foundConfig = ConfigLoader.findAndLoad();
+      this.config = foundConfig || { severity: 'warning' };
+    }
   }
 
   async check(): Promise<SEOReport> {
@@ -43,63 +56,11 @@ export class SEOChecker {
       await this.launch();
       await this.navigate();
 
-      const metaTagsChecker = new MetaTagsChecker(this.page!);
-      const headingsChecker = new HeadingsChecker(this.page!);
-      const imagesChecker = new ImagesChecker(this.page!);
-      const performanceChecker = new PerformanceChecker(this.page!);
-      const robotsTxtChecker = new RobotsTxtChecker(this.page!);
-      const sitemapChecker = new SitemapChecker(this.page!);
-      const securityChecker = new SecurityChecker(this.page!);
-      const structuredDataChecker = new StructuredDataChecker(this.page!);
-      const socialMediaChecker = new SocialMediaChecker(this.page!);
-      const contentChecker = new ContentChecker(this.page!);
-      const linksChecker = new LinksChecker(this.page!);
-      const uiElementsChecker = new UIElementsChecker(this.page!);
-      const technicalChecker = new TechnicalChecker(this.page!);
-      const accessibilityChecker = new AccessibilityChecker(this.page!);
-      const urlFactorsChecker = new URLFactorsChecker(this.page!);
-      const spamDetectionChecker = new SpamDetectionChecker(this.page!);
-      const pageQualityChecker = new PageQualityChecker(this.page!);
-      const advancedImagesChecker = new AdvancedImagesChecker(this.page!);
-      const multimediaChecker = new MultimediaChecker(this.page!);
-      const coreWebVitalsChecker = new CoreWebVitalsChecker(this.page!);
-      const analyticsChecker = new AnalyticsChecker(this.page!);
-      const mobileUXChecker = new MobileUXChecker(this.page!);
-      const schemaValidationChecker = new SchemaValidationChecker(this.page!);
-      const resourceOptimizationChecker = new ResourceOptimizationChecker(this.page!);
-      const legalComplianceChecker = new LegalComplianceChecker(this.page!);
-      const ecommerceChecker = new EcommerceChecker(this.page!);
-      const internationalizationChecker = new InternationalizationChecker(this.page!);
+      // Run all checkers
+      const results = await this.runAllCheckers();
 
-      const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization] = await Promise.all([
-        metaTagsChecker.checkAll(),
-        headingsChecker.checkAll(),
-        imagesChecker.checkAll(),
-        performanceChecker.checkAll(),
-        robotsTxtChecker.checkAll(),
-        sitemapChecker.checkAll(),
-        securityChecker.checkAll(),
-        structuredDataChecker.checkAll(),
-        socialMediaChecker.checkAll(),
-        contentChecker.checkAll(),
-        linksChecker.checkAll(),
-        uiElementsChecker.checkAll(),
-        technicalChecker.checkAll(),
-        accessibilityChecker.checkAll(),
-        urlFactorsChecker.checkAll(),
-        spamDetectionChecker.checkAll(),
-        pageQualityChecker.checkAll(),
-        advancedImagesChecker.checkAll(),
-        multimediaChecker.checkAll(),
-        coreWebVitalsChecker.checkAll(),
-        analyticsChecker.checkAll(),
-        mobileUXChecker.checkAll(),
-        schemaValidationChecker.checkAll(),
-        resourceOptimizationChecker.checkAll(),
-        legalComplianceChecker.checkAll(),
-        ecommerceChecker.checkAll(),
-        internationalizationChecker.checkAll(),
-      ]);
+      // Apply configuration to filter and modify results
+      const { metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization } = results;
 
       const allChecks = [...metaTags, ...headings, ...images, ...performance, ...robotsTxt, ...sitemap, ...security, ...structuredData, ...socialMedia, ...content, ...links, ...uiElements, ...technical, ...accessibility, ...urlFactors, ...spamDetection, ...pageQuality, ...advancedImages, ...multimedia, ...coreWebVitals, ...analytics, ...mobileUX, ...schemaValidation, ...resourceOptimization, ...legalCompliance, ...ecommerce, ...internationalization];
       const passed = allChecks.filter((c) => c.passed).length;
@@ -172,6 +133,250 @@ export class SEOChecker {
     });
   }
 
+  /**
+   * Run all checkers and apply configuration
+   */
+  private async runAllCheckers() {
+    const metaTagsChecker = new MetaTagsChecker(this.page!);
+    const headingsChecker = new HeadingsChecker(this.page!);
+    const imagesChecker = new ImagesChecker(this.page!);
+    const performanceChecker = new PerformanceChecker(this.page!);
+    const robotsTxtChecker = new RobotsTxtChecker(this.page!);
+    const sitemapChecker = new SitemapChecker(this.page!);
+    const securityChecker = new SecurityChecker(this.page!);
+    const structuredDataChecker = new StructuredDataChecker(this.page!);
+    const socialMediaChecker = new SocialMediaChecker(this.page!);
+    const contentChecker = new ContentChecker(this.page!);
+    const linksChecker = new LinksChecker(this.page!);
+    const uiElementsChecker = new UIElementsChecker(this.page!);
+    const technicalChecker = new TechnicalChecker(this.page!);
+    const accessibilityChecker = new AccessibilityChecker(this.page!);
+    const urlFactorsChecker = new URLFactorsChecker(this.page!);
+    const spamDetectionChecker = new SpamDetectionChecker(this.page!);
+    const pageQualityChecker = new PageQualityChecker(this.page!);
+    const advancedImagesChecker = new AdvancedImagesChecker(this.page!);
+    const multimediaChecker = new MultimediaChecker(this.page!);
+    const coreWebVitalsChecker = new CoreWebVitalsChecker(this.page!);
+    const analyticsChecker = new AnalyticsChecker(this.page!);
+    const mobileUXChecker = new MobileUXChecker(this.page!);
+    const schemaValidationChecker = new SchemaValidationChecker(this.page!);
+    const resourceOptimizationChecker = new ResourceOptimizationChecker(this.page!);
+    const legalComplianceChecker = new LegalComplianceChecker(this.page!);
+    const ecommerceChecker = new EcommerceChecker(this.page!);
+    const internationalizationChecker = new InternationalizationChecker(this.page!);
+
+    // Run checkers in parallel, but only if they're enabled
+    const checkerPromises = [];
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'metaTags')) {
+      checkerPromises.push(metaTagsChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'headings')) {
+      checkerPromises.push(headingsChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'images')) {
+      checkerPromises.push(imagesChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'performance')) {
+      checkerPromises.push(performanceChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'robotsTxt')) {
+      checkerPromises.push(robotsTxtChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'sitemap')) {
+      checkerPromises.push(sitemapChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'security')) {
+      checkerPromises.push(securityChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'structuredData')) {
+      checkerPromises.push(structuredDataChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'socialMedia')) {
+      checkerPromises.push(socialMediaChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'content')) {
+      checkerPromises.push(contentChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'links')) {
+      checkerPromises.push(linksChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'uiElements')) {
+      checkerPromises.push(uiElementsChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'technical')) {
+      checkerPromises.push(technicalChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'accessibility')) {
+      checkerPromises.push(accessibilityChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'urlFactors')) {
+      checkerPromises.push(urlFactorsChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'spamDetection')) {
+      checkerPromises.push(spamDetectionChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'pageQuality')) {
+      checkerPromises.push(pageQualityChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'advancedImages')) {
+      checkerPromises.push(advancedImagesChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'multimedia')) {
+      checkerPromises.push(multimediaChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'coreWebVitals')) {
+      checkerPromises.push(coreWebVitalsChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'analytics')) {
+      checkerPromises.push(analyticsChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'mobileUX')) {
+      checkerPromises.push(mobileUXChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'schemaValidation')) {
+      checkerPromises.push(schemaValidationChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'resourceOptimization')) {
+      checkerPromises.push(resourceOptimizationChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'legalCompliance')) {
+      checkerPromises.push(legalComplianceChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'ecommerce')) {
+      checkerPromises.push(ecommerceChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    if (ConfigLoader.isCheckerEnabled(this.config, 'internationalization')) {
+      checkerPromises.push(internationalizationChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization] = await Promise.all(checkerPromises);
+
+    // Apply severity levels to results
+    return {
+      metaTags: this.applyConfigToResults('metaTags', metaTags),
+      headings: this.applyConfigToResults('headings', headings),
+      images: this.applyConfigToResults('images', images),
+      performance: this.applyConfigToResults('performance', performance),
+      robotsTxt: this.applyConfigToResults('robotsTxt', robotsTxt),
+      sitemap: this.applyConfigToResults('sitemap', sitemap),
+      security: this.applyConfigToResults('security', security),
+      structuredData: this.applyConfigToResults('structuredData', structuredData),
+      socialMedia: this.applyConfigToResults('socialMedia', socialMedia),
+      content: this.applyConfigToResults('content', content),
+      links: this.applyConfigToResults('links', links),
+      uiElements: this.applyConfigToResults('uiElements', uiElements),
+      technical: this.applyConfigToResults('technical', technical),
+      accessibility: this.applyConfigToResults('accessibility', accessibility),
+      urlFactors: this.applyConfigToResults('urlFactors', urlFactors),
+      spamDetection: this.applyConfigToResults('spamDetection', spamDetection),
+      pageQuality: this.applyConfigToResults('pageQuality', pageQuality),
+      advancedImages: this.applyConfigToResults('advancedImages', advancedImages),
+      multimedia: this.applyConfigToResults('multimedia', multimedia),
+      coreWebVitals: this.applyConfigToResults('coreWebVitals', coreWebVitals),
+      analytics: this.applyConfigToResults('analytics', analytics),
+      mobileUX: this.applyConfigToResults('mobileUX', mobileUX),
+      schemaValidation: this.applyConfigToResults('schemaValidation', schemaValidation),
+      resourceOptimization: this.applyConfigToResults('resourceOptimization', resourceOptimization),
+      legalCompliance: this.applyConfigToResults('legalCompliance', legalCompliance),
+      ecommerce: this.applyConfigToResults('ecommerce', ecommerce),
+      internationalization: this.applyConfigToResults('internationalization', internationalization),
+    };
+  }
+
+  /**
+   * Apply configuration to check results (severity levels, filtering)
+   */
+  private applyConfigToResults(checkerName: string, results: SEOCheckResult[]): SEOCheckResult[] {
+    return results.map((result) => {
+      // Apply default severity if not already set
+      if (!result.severity) {
+        result.severity = this.config.severity || 'warning';
+      }
+      return result;
+    });
+  }
+
   async close(): Promise<void> {
     if (this.page) {
       await this.page.close();
@@ -183,6 +388,7 @@ export class SEOChecker {
 }
 
 export * from './types';
+export * from './config';
 export { MetaTagsChecker } from './checkers/metaTags';
 export { HeadingsChecker } from './checkers/headings';
 export { ImagesChecker } from './checkers/images';
