@@ -1,8 +1,13 @@
 import { Page } from 'playwright';
 import { SEOCheckResult } from '../types';
+import { CheckerErrorHandler } from '../errors/index.js';
 
 export class RobotsTxtChecker {
-  constructor(private page: Page) {}
+  private errorHandler: CheckerErrorHandler;
+
+  constructor(private page: Page) {
+    this.errorHandler = new CheckerErrorHandler(page, 'RobotsTxtChecker');
+  }
 
   async checkAll(): Promise<SEOCheckResult[]> {
     const results: SEOCheckResult[] = [];
@@ -14,11 +19,20 @@ export class RobotsTxtChecker {
   }
 
   private async checkRobotsTxtExists(): Promise<SEOCheckResult> {
-    try {
+    return this.errorHandler.executeCheck(async () => {
       const url = new URL(this.page.url());
       const robotsUrl = `${url.protocol}//${url.host}/robots.txt`;
 
-      const response = await this.page.context().request.get(robotsUrl);
+      // Use retry mechanism for network requests
+      const response = await this.errorHandler.fetchWithRetry(
+        robotsUrl,
+        'checkRobotsTxtExists',
+        {
+          maxAttempts: 3,
+          initialDelay: 1000,
+        }
+      );
+
       const status = response.status();
 
       if (status === 200) {
@@ -50,20 +64,24 @@ export class RobotsTxtChecker {
           details: { url: robotsUrl, status },
         };
       }
-    } catch (error) {
-      return {
-        passed: false,
-        message: `Error checking robots.txt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
-    }
+    }, 'checkRobotsTxtExists');
   }
 
   private async checkRobotsTxtAccessible(): Promise<SEOCheckResult> {
-    try {
+    return this.errorHandler.executeCheck(async () => {
       const url = new URL(this.page.url());
       const robotsUrl = `${url.protocol}//${url.host}/robots.txt`;
 
-      const response = await this.page.context().request.get(robotsUrl);
+      // Use retry mechanism for network requests
+      const response = await this.errorHandler.fetchWithRetry(
+        robotsUrl,
+        'checkRobotsTxtAccessible',
+        {
+          maxAttempts: 3,
+          initialDelay: 1000,
+        }
+      );
+
       const content = await response.text();
 
       if (response.status() !== 200) {
@@ -108,11 +126,9 @@ export class RobotsTxtChecker {
           content: content.substring(0, 500), // First 500 chars
         },
       };
-    } catch (error) {
-      return {
-        passed: true,
-        message: 'robots.txt validation skipped due to error',
-      };
-    }
+    }, 'checkRobotsTxtAccessible', {
+      passOnError: true, // Gracefully degrade if check fails
+      messagePrefix: 'robots.txt validation skipped due to error',
+    });
   }
 }
