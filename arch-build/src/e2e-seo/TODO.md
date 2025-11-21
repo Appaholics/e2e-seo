@@ -2,11 +2,6 @@
 
 This document outlines the remaining tasks to make the e2e-seo checker tool production-ready.
 
-## 🐛 Known Issues / Fixes Required
-- [ ] **CLI Testing**: Integration tests time out even with 120s limit (likely environment/resource issue).
-- [ ] **Desktop Build**: AppImage bundling fails in headless environments (`failed to run linuxdeploy`).
-- [ ] **Arch Linux Build**: `makepkg` fails because `npm run desktop:build` attempts to build AppImage. Need to separate binary compilation from bundling in build scripts.
-
 ## 🎯 Core Features Enhancement
 
 ### SEO Checkers
