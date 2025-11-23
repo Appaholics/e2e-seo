@@ -34,13 +34,77 @@ export class SpamDetectionChecker {
           const style = window.getComputedStyle(el);
           const hasText = (el.textContent?.trim().length || 0) > 20;
 
-          return (
-            hasText &&
-            (style.display === 'none' ||
-              style.visibility === 'hidden' ||
-              style.opacity === '0' ||
-              parseInt(style.fontSize) === 0)
+          if (!hasText) return false;
+
+          // Check if element or parent is legitimately hidden for accessibility/UI purposes
+          const isLegitimateHidden = () => {
+            // Check ARIA attributes
+            if (
+              el.getAttribute('aria-hidden') === 'true' ||
+              el.getAttribute('role') === 'presentation' ||
+              el.getAttribute('role') === 'tab' ||
+              el.getAttribute('role') === 'tabpanel' ||
+              el.hasAttribute('aria-expanded')
+            ) {
+              return true;
+            }
+
+            // Check common UI framework classes for accordions, tabs, modals, dropdowns
+            const className = el.className?.toString() || '';
+            const legitimateClasses = [
+              'accordion',
+              'collapse',
+              'tab-pane',
+              'tab-content',
+              'modal',
+              'dropdown',
+              'offcanvas',
+              'drawer',
+              'tooltip',
+              'popover',
+              'menu',
+              'hidden-',
+              'sr-only',
+              'visually-hidden',
+              'screen-reader',
+            ];
+
+            if (legitimateClasses.some(cls => className.toLowerCase().includes(cls))) {
+              return true;
+            }
+
+            // Check for data attributes commonly used in interactive components
+            if (
+              el.hasAttribute('data-toggle') ||
+              el.hasAttribute('data-collapse') ||
+              el.hasAttribute('data-accordion') ||
+              el.hasAttribute('data-modal') ||
+              el.hasAttribute('data-drawer')
+            ) {
+              return true;
+            }
+
+            // Check if parent container has interactive attributes
+            const parent = el.parentElement;
+            if (parent) {
+              const parentClass = parent.className?.toString() || '';
+              if (legitimateClasses.some(cls => parentClass.toLowerCase().includes(cls))) {
+                return true;
+              }
+            }
+
+            return false;
+          };
+
+          const isHidden = (
+            style.display === 'none' ||
+            style.visibility === 'hidden' ||
+            style.opacity === '0' ||
+            parseInt(style.fontSize) === 0
           );
+
+          // Only flag as suspicious if hidden AND not legitimately hidden
+          return isHidden && !isLegitimateHidden();
         });
 
         const hiddenTextContent = hiddenElements

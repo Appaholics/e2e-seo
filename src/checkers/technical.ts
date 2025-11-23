@@ -1,8 +1,8 @@
-import { Page } from 'playwright';
+import { Page, Response } from 'playwright';
 import { SEOCheckResult } from '../types';
 
 export class TechnicalChecker {
-  constructor(private page: Page) {}
+  constructor(private page: Page, private response: Response | null = null) {}
 
   async checkAll(): Promise<SEOCheckResult[]> {
     const results: SEOCheckResult[] = [];
@@ -16,28 +16,17 @@ export class TechnicalChecker {
   }
 
   private async checkResponseCode(): Promise<SEOCheckResult> {
-    // NOTE: Temporarily disabled to prevent execution context destruction
-    // TODO: Refactor to use initial response from navigation
-    return {
-      passed: true,
-      message: 'Response code check temporarily disabled (needs refactoring)',
-    };
-    /* Original code
     try {
-      const response = await this.page.goto(this.page.url(), {
-        waitUntil: 'domcontentloaded'
-      });
-
-      if (!response) {
+      if (!this.response) {
         return {
           passed: false,
           message: 'Could not get response from page',
         };
       }
 
-      const status = response.status();
-      const url = response.url();
-      const chain = response.request().redirectedFrom();
+      const status = this.response.status();
+      const url = this.response.url();
+      const chain = this.response.request().redirectedFrom();
 
       // Count redirect chain
       let redirectCount = 0;
@@ -105,7 +94,6 @@ export class TechnicalChecker {
         message: `Error checking response code: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
-    */
   }
 
   private async checkPageSize(): Promise<SEOCheckResult> {
@@ -147,26 +135,15 @@ export class TechnicalChecker {
   }
 
   private async checkCompression(): Promise<SEOCheckResult> {
-    // NOTE: Temporarily disabled to prevent execution context destruction
-    // TODO: Refactor to use initial response from navigation
-    return {
-      passed: true,
-      message: 'Compression check temporarily disabled (needs refactoring)',
-    };
-    /* Original code
     try {
-      const response = await this.page.goto(this.page.url(), {
-        waitUntil: 'domcontentloaded',
-      });
-
-      if (!response) {
+      if (!this.response) {
         return {
           passed: false,
           message: 'Could not check compression - no response',
         };
       }
 
-      const headers = response.headers();
+      const headers = this.response.headers();
       const contentEncoding = headers['content-encoding'];
       const hasCompression = contentEncoding && (
         contentEncoding.includes('gzip') ||
@@ -197,7 +174,6 @@ export class TechnicalChecker {
         message: 'Compression check skipped due to error',
       };
     }
-    */
   }
 
   private async checkDuplicateTitles(): Promise<SEOCheckResult> {

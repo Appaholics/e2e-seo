@@ -1,4 +1,4 @@
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser, Page, Response } from 'playwright';
 import { SEOCheckerOptions, SEOReport, SEOCheckResult } from './types';
 import { SEOConfig, ConfigLoader } from './config';
 import { MetaTagsChecker } from './checkers/metaTags';
@@ -32,6 +32,7 @@ import { InternationalizationChecker } from './checkers/internationalization';
 export class SEOChecker {
   private browser: Browser | null = null;
   private page: Page | null = null;
+  private response: Response | null = null;
   private config: SEOConfig;
 
   constructor(private options: SEOCheckerOptions) {
@@ -129,7 +130,8 @@ export class SEOChecker {
     }
 
     // Navigate and wait for the page to be fully loaded
-    await this.page.goto(this.options.url, {
+    // Capture the response for checkers that need HTTP headers
+    this.response = await this.page.goto(this.options.url, {
       waitUntil: 'networkidle',
       timeout: this.options.timeout,
     });
@@ -148,20 +150,20 @@ export class SEOChecker {
     const performanceChecker = new PerformanceChecker(this.page!);
     const robotsTxtChecker = new RobotsTxtChecker(this.page!);
     const sitemapChecker = new SitemapChecker(this.page!);
-    const securityChecker = new SecurityChecker(this.page!);
+    const securityChecker = new SecurityChecker(this.page!, this.response);
     const structuredDataChecker = new StructuredDataChecker(this.page!);
     const socialMediaChecker = new SocialMediaChecker(this.page!);
     const contentChecker = new ContentChecker(this.page!);
     const linksChecker = new LinksChecker(this.page!);
     const uiElementsChecker = new UIElementsChecker(this.page!);
-    const technicalChecker = new TechnicalChecker(this.page!);
+    const technicalChecker = new TechnicalChecker(this.page!, this.response);
     const accessibilityChecker = new AccessibilityChecker(this.page!);
     const urlFactorsChecker = new URLFactorsChecker(this.page!);
     const spamDetectionChecker = new SpamDetectionChecker(this.page!);
     const pageQualityChecker = new PageQualityChecker(this.page!);
     const advancedImagesChecker = new AdvancedImagesChecker(this.page!);
     const multimediaChecker = new MultimediaChecker(this.page!);
-    const coreWebVitalsChecker = new CoreWebVitalsChecker(this.page!);
+    const coreWebVitalsChecker = new CoreWebVitalsChecker(this.page!, this.response);
     const analyticsChecker = new AnalyticsChecker(this.page!);
     const mobileUXChecker = new MobileUXChecker(this.page!);
     const schemaValidationChecker = new SchemaValidationChecker(this.page!);

@@ -1,8 +1,8 @@
-import { Page } from 'playwright';
+import { Page, Response } from 'playwright';
 import { SEOCheckResult } from '../types';
 
 export class SecurityChecker {
-  constructor(private page: Page) {}
+  constructor(private page: Page, private response: Response | null = null) {}
 
   async checkAll(): Promise<SEOCheckResult[]> {
     const results: SEOCheckResult[] = [];
@@ -90,24 +90,14 @@ export class SecurityChecker {
 
   private async checkSecurityHeaders(): Promise<SEOCheckResult> {
     try {
-      // NOTE: Removed page.goto() as it was destroying execution context for other checkers
-      // TODO: Pass the initial response from navigation instead of reloading
-      return {
-        passed: true,
-        message: 'Security headers check temporarily disabled (needs refactoring)',
-      };
-
-      /* Original code - needs refactoring to use initial response
-      const response = await this.page.goto(this.page.url(), { waitUntil: 'domcontentloaded' });
-
-      if (!response) {
+      if (!this.response) {
         return {
           passed: false,
-          message: 'Could not check security headers - no response',
+          message: 'Could not check security headers - no response available',
         };
       }
 
-      const headers = response.headers();
+      const headers = this.response.headers();
       const securityHeaders = {
         'strict-transport-security': headers['strict-transport-security'],
         'x-content-type-options': headers['x-content-type-options'],
@@ -136,7 +126,6 @@ export class SecurityChecker {
           },
         };
       }
-      */
     } catch (error) {
       return {
         passed: true,

@@ -29,7 +29,46 @@ export class AdvancedImagesChecker {
 
         images.forEach((img) => {
           const src = img.src || '';
-          const ext = src.split('.').pop()?.split('?')[0]?.toLowerCase() || 'unknown';
+          let ext = 'unknown';
+
+          try {
+            const url = new URL(src);
+            const pathname = url.pathname;
+
+            // Check for common CDN patterns (dynamic image generation services)
+            const cdnPatterns = [
+              'placehold.co',
+              'placeholder.com',
+              'via.placeholder.com',
+              'dummyimage.com',
+              'picsum.photos',
+              'loremflickr.com',
+            ];
+
+            const isCDN = cdnPatterns.some(pattern => url.hostname.includes(pattern));
+
+            if (isCDN) {
+              ext = 'dynamic';
+            } else {
+              // Extract file extension from pathname
+              const parts = pathname.split('.');
+              if (parts.length > 1) {
+                // Get the last part and remove any query parameters
+                const lastPart = parts[parts.length - 1].split('?')[0].split('#')[0];
+                // Only use if it looks like a valid extension (2-4 characters)
+                if (lastPart && lastPart.length >= 2 && lastPart.length <= 4 && /^[a-z0-9]+$/i.test(lastPart)) {
+                  ext = lastPart.toLowerCase();
+                }
+              }
+            }
+          } catch (e) {
+            // If URL parsing fails, try simple extension extraction as fallback
+            const match = src.match(/\.([a-z0-9]{2,4})(?:[?#]|$)/i);
+            if (match) {
+              ext = match[1].toLowerCase();
+            }
+          }
+
           formats[ext] = (formats[ext] || 0) + 1;
         });
 
@@ -50,9 +89,13 @@ export class AdvancedImagesChecker {
         };
       }
 
+      // Filter out 'unknown' and 'dynamic' for the display message
+      const knownFormats = Object.keys(formatData.formats).filter(f => f !== 'unknown' && f !== 'dynamic');
+      const displayFormats = knownFormats.length > 0 ? knownFormats.join(', ') : 'various formats';
+
       return {
         passed: true,
-        message: `Images use modern formats (${Object.keys(formatData.formats).join(', ')})`,
+        message: `Images use modern formats (${displayFormats})`,
         details: formatData,
       };
     } catch (error) {

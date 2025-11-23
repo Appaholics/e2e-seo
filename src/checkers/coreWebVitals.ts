@@ -1,8 +1,8 @@
-import { Page } from 'playwright';
+import { Page, Response } from 'playwright';
 import { SEOCheckResult } from '../types';
 
 export class CoreWebVitalsChecker {
-  constructor(private page: Page) {}
+  constructor(private page: Page, private response: Response | null = null) {}
 
   async checkAll(): Promise<SEOCheckResult[]> {
     const results: SEOCheckResult[] = [];
@@ -548,26 +548,15 @@ export class CoreWebVitalsChecker {
   }
 
   private async checkCacheHeaders(): Promise<SEOCheckResult> {
-    // NOTE: Temporarily disabled to prevent execution context destruction
-    // TODO: Refactor to use initial response from navigation
-    return {
-      passed: true,
-      message: 'Cache headers check temporarily disabled (needs refactoring)',
-    };
-    /* Original code
     try {
-      const response = await this.page.goto(this.page.url(), {
-        waitUntil: 'domcontentloaded'
-      });
-
-      if (!response) {
+      if (!this.response) {
         return {
           passed: false,
           message: 'Could not check cache headers',
         };
       }
 
-      const headers = response.headers();
+      const headers = this.response.headers();
       const cacheControl = headers['cache-control'];
       const expires = headers['expires'];
       const etag = headers['etag'];
@@ -593,7 +582,6 @@ export class CoreWebVitalsChecker {
         message: 'Cache headers check skipped',
       };
     }
-    */
   }
 
   private async checkServerResponseTime(): Promise<SEOCheckResult> {
