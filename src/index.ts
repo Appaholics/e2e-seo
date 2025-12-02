@@ -28,6 +28,7 @@ import { ResourceOptimizationChecker } from './checkers/resourceOptimization';
 import { LegalComplianceChecker } from './checkers/legalCompliance';
 import { EcommerceChecker } from './checkers/ecommerce';
 import { InternationalizationChecker } from './checkers/internationalization';
+import { HeatmapChecker } from './checkers/heatmap';
 
 export class SEOChecker {
   private browser: Browser | null = null;
@@ -61,9 +62,9 @@ export class SEOChecker {
       const results = await this.runAllCheckers();
 
       // Apply configuration to filter and modify results
-      const { metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization } = results;
+      const { metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization, heatmap } = results;
 
-      const allChecks = [...metaTags, ...headings, ...images, ...performance, ...robotsTxt, ...sitemap, ...security, ...structuredData, ...socialMedia, ...content, ...links, ...uiElements, ...technical, ...accessibility, ...urlFactors, ...spamDetection, ...pageQuality, ...advancedImages, ...multimedia, ...coreWebVitals, ...analytics, ...mobileUX, ...schemaValidation, ...resourceOptimization, ...legalCompliance, ...ecommerce, ...internationalization];
+      const allChecks = [...metaTags, ...headings, ...images, ...performance, ...robotsTxt, ...sitemap, ...security, ...structuredData, ...socialMedia, ...content, ...links, ...uiElements, ...technical, ...accessibility, ...urlFactors, ...spamDetection, ...pageQuality, ...advancedImages, ...multimedia, ...coreWebVitals, ...analytics, ...mobileUX, ...schemaValidation, ...resourceOptimization, ...legalCompliance, ...ecommerce, ...internationalization, ...heatmap];
       const passed = allChecks.filter((c) => c.passed).length;
       const failed = allChecks.filter((c) => !c.passed).length;
       const score = Math.round((passed / allChecks.length) * 100);
@@ -99,6 +100,7 @@ export class SEOChecker {
           legalCompliance,
           ecommerce,
           internationalization,
+          heatmap,
         },
         score,
         summary: {
@@ -171,6 +173,7 @@ export class SEOChecker {
     const legalComplianceChecker = new LegalComplianceChecker(this.page!);
     const ecommerceChecker = new EcommerceChecker(this.page!);
     const internationalizationChecker = new InternationalizationChecker(this.page!);
+    const heatmapChecker = new HeatmapChecker(this.page!);
 
     // Run checkers in parallel, but only if they're enabled
     const checkerPromises = [];
@@ -337,7 +340,13 @@ export class SEOChecker {
       checkerPromises.push(Promise.resolve([]));
     }
 
-    const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization] = await Promise.all(checkerPromises);
+    if (ConfigLoader.isCheckerEnabled(this.config, 'heatmap')) {
+      checkerPromises.push(heatmapChecker.checkAll());
+    } else {
+      checkerPromises.push(Promise.resolve([]));
+    }
+
+    const [metaTags, headings, images, performance, robotsTxt, sitemap, security, structuredData, socialMedia, content, links, uiElements, technical, accessibility, urlFactors, spamDetection, pageQuality, advancedImages, multimedia, coreWebVitals, analytics, mobileUX, schemaValidation, resourceOptimization, legalCompliance, ecommerce, internationalization, heatmap] = await Promise.all(checkerPromises);
 
     // Apply severity levels to results
     return {
@@ -368,6 +377,7 @@ export class SEOChecker {
       legalCompliance: this.applyConfigToResults('legalCompliance', legalCompliance),
       ecommerce: this.applyConfigToResults('ecommerce', ecommerce),
       internationalization: this.applyConfigToResults('internationalization', internationalization),
+      heatmap: this.applyConfigToResults('heatmap', heatmap),
     };
   }
 
@@ -423,3 +433,4 @@ export { ResourceOptimizationChecker } from './checkers/resourceOptimization';
 export { LegalComplianceChecker } from './checkers/legalCompliance';
 export { EcommerceChecker } from './checkers/ecommerce';
 export { InternationalizationChecker } from './checkers/internationalization';
+export { HeatmapChecker } from './checkers/heatmap';

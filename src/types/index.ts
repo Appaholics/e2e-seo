@@ -40,6 +40,7 @@ export interface SEOReport {
     legalCompliance: SEOCheckResult[];
     ecommerce: SEOCheckResult[];
     internationalization: SEOCheckResult[];
+    heatmap: SEOCheckResult[];
   };
   score: number;
   summary: {

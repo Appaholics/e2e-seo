@@ -29,6 +29,14 @@ An end-to-end SEO testing toolkit for websites using browser automation. Built w
   - DOM content loaded time
   - First Contentful Paint
 
+- **🔥 Heatmap Analysis** *(NEW)*
+  - Predictive click heatmap generation
+  - Scroll depth analysis
+  - Attention zone detection (F-pattern, visual hierarchy)
+  - CTA placement analysis
+  - Above-the-fold content scoring
+  - Visual heatmap screenshot capture
+
 - **Automated Browser Testing**
   - Uses Playwright for real browser testing
   - Supports headless and headed modes
@@ -230,7 +238,7 @@ See [TODO.md](./TODO.md) for the complete production readiness checklist.
 
 ### Upcoming Features
 
-- 🔥 Heatmap generation (click, scroll, attention)
+- ✅ ~~Heatmap generation (click, scroll, attention)~~ - **DONE!**
 - 📊 HTML/PDF report generation
 - 🔍 Structured data validation (JSON-LD, Schema.org)
 - 🔗 Link analysis and broken link detection
