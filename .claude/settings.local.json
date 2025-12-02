@@ -4,7 +4,12 @@
       "Bash(node:*)",
       "Bash(npm run build)",
       "Bash(npm run cli:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm install)",
+      "Bash(pnpm install)",
+      "Bash(pnpm run build:*)",
+      "Bash(npx playwright install chromium)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

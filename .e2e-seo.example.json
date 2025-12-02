@@ -1,0 +1,33 @@
+{
+  "preset": "advanced",
+  "severity": "warning",
+  "rules": {
+    "metaTags": true,
+    "headings": true,
+    "images": true,
+    "performance": true,
+    "robotsTxt": true,
+    "sitemap": true,
+    "security": true,
+    "structuredData": true,
+    "socialMedia": true,
+    "content": true,
+    "links": true,
+    "uiElements": true,
+    "technical": true,
+    "accessibility": true,
+    "urlFactors": true,
+    "spamDetection": true,
+    "pageQuality": true,
+    "advancedImages": true,
+    "multimedia": true,
+    "coreWebVitals": true,
+    "analytics": true,
+    "mobileUX": true,
+    "schemaValidation": true,
+    "resourceOptimization": true,
+    "legalCompliance": true,
+    "ecommerce": false,
+    "internationalization": true
+  }
+}
